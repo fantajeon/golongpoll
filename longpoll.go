@@ -24,10 +24,10 @@ const (
 type EventType int
 
 const (
-	EventTimeout EventType = 1 + iota
-	EventArrivedMessage
-	EventDisconnected
-	EventError
+	EVENTTIMEOUT EventType = 1 + iota
+	EVENTARRIVEDMESSAGE
+	EVENTDISCONNECTED
+	EVENTERROR
 )
 
 type SubscriptionUserCallback func(w http.ResponseWriter, r *http.Request, category string, event EventType, message string)
@@ -233,7 +233,7 @@ func getLongPollSubscriptionHandlerWithCallback(maxTimeoutSeconds int, subscript
 			if loggingEnabled {
 				log.Printf("Error: Invalid subscription category, must be 1-1024 characters long.\n")
 			}
-			callback(w, r, category, EventError, "{\"error\": \"Invalid subscription category, must be 1-1024 characters long.\"}")
+			callback(w, r, category, EVENTERROR, "{\"error\": \"Invalid subscription category, must be 1-1024 characters long.\"}")
 			return
 		}
 		// Default to only looking for current events
@@ -243,7 +243,7 @@ func getLongPollSubscriptionHandlerWithCallback(maxTimeoutSeconds int, subscript
 			if loggingEnabled {
 				log.Printf("Error creating new Subscription: %s.\n", err)
 			}
-			callback(w, r, category, EventError, "{\"error\": \"Error creating new Subscription.\"}")
+			callback(w, r, category, EVENTERROR, "{\"error\": \"Error creating new Subscription.\"}")
 			return
 		}
 		subscriptionRequests <- *subscription
@@ -259,25 +259,25 @@ func getLongPollSubscriptionHandlerWithCallback(maxTimeoutSeconds int, subscript
 			clientTimeouts <- subscription.clientCategoryPair
 			timeout_resp := makeTimeoutResponse(time.Now())
 			if jsonData, err := json.Marshal(timeout_resp); err == nil {
-				callback(w, r, category, EventTimeout, string(jsonData))
+				callback(w, r, category, EVENTTIMEOUT, string(jsonData))
 			} else {
-				callback(w, r, category, EventError, "{\"error\": \"json marshaller failed\"}")
+				callback(w, r, category, EVENTERROR, "{\"error\": \"json marshaller failed\"}")
 			}
 		case events := <-subscription.Events:
 			// Consume event.  Subscription manager will automatically discard
 			// this client's channel upon sending event
 			// NOTE: event is actually []Event
 			if jsonData, err := json.Marshal(eventResponse{&events}); err == nil {
-				callback(w, r, category, EventArrivedMessage, string(jsonData))
+				callback(w, r, category, EVENTARRIVEDMESSAGE, string(jsonData))
 			} else {
-				callback(w, r, category, EventError, "{\"error\": \"json marshaller failed\"}")
+				callback(w, r, category, EVENTERROR, "{\"error\": \"json marshaller failed\"}")
 			}
 		case <-disconnectNotify:
 			// Client connection closed before any events occurred and before
 			// the timeout was exceeded.  Tell manager to forget about this
 			// client.
 			clientTimeouts <- subscription.clientCategoryPair
-			callback(w, r, category, EventDisconnected, "")
+			callback(w, r, category, EVENTDISCONNECTED, "")
 		}
 	}
 }
