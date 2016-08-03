@@ -226,9 +226,9 @@ func getLongPollSubscriptionHandlerWithCallback(maxTimeoutSeconds int, subscript
 	clientTimeouts chan<- clientCategoryPair, loggingEnabled bool) func(w http.ResponseWriter, r *http.Request, category string, callback SubscriptionUserCallback, timeout int64, userparam interface{}) {
 	return func(w http.ResponseWriter, r *http.Request, category string, callback SubscriptionUserCallback, timeout int64, userparam interface{}) {
 		// Don't cache response:
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1.
-		w.Header().Set("Pragma", "no-cache")                                   // HTTP 1.0.
-		w.Header().Set("Expires", "0")                                         // Proxies.
+		//w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1.
+		//w.Header().Set("Pragma", "no-cache")                                   // HTTP 1.0.
+		//w.Header().Set("Expires", "0")                                         // Proxies.
 		if len(category) == 0 || len(category) > 1024 {
 			if loggingEnabled {
 				log.Printf("Error: Invalid subscription category, must be 1-1024 characters long.\n")
